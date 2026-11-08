@@ -6,6 +6,7 @@ import android.content.pm.PackageManager;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
+import android.content.ComponentName;
 import android.content.Context;
 import android.media.MediaMetadata;
 import android.graphics.Bitmap;
@@ -38,7 +39,8 @@ public class MainActivity extends Activity {
     private boolean isPlaying = false;
     private Bitmap albumArtwork;
     private String songTitle = "DONIX C-WALK", songArtist = "dongurikobo";
-    private static final int MEDIA_NOTIFICATION_ID = 201;
+    static final int MEDIA_NOTIFICATION_ID = 201;
+    private boolean foregroundStarted = false;
     private static final String ACTION_PLAY = "jp.dongurikobo.donixcwalk.PLAY";
     private static final String ACTION_PAUSE = "jp.dongurikobo.donixcwalk.PAUSE";
     private static final String ACTION_PREV = "jp.dongurikobo.donixcwalk.PREV";
@@ -87,17 +89,36 @@ public class MainActivity extends Activity {
         if (isPlaying) {
             if (Build.VERSION.SDK_INT < 33 || checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED) {
                 showNotification();
+                startPlaybackService();
             } else {
                 requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS}, NOTIFICATION_PERMISSION_REQUEST);
             }
         }
-        else if (notificationManager != null) notificationManager.cancel(MEDIA_NOTIFICATION_ID);
+        else {
+            stopPlaybackService();
+            if (notificationManager != null) notificationManager.cancel(MEDIA_NOTIFICATION_ID);
+        }
     }
     private PendingIntent mediaAction(String action, int requestCode) {
         Intent intent = new Intent(this, MainActivity.class).setAction(action)
                 .addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_CLEAR_TOP);
         return PendingIntent.getActivity(this, requestCode, intent,
                 PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+    }
+    private void startPlaybackService() {
+        if (foregroundStarted) return;
+        // A foreground media-playback service keeps this app process prioritized while audio plays.
+        try {
+            Intent intent = new Intent(this, PlaybackService.class);
+            if (Build.VERSION.SDK_INT >= 26) startForegroundService(intent);
+            else startService(intent);
+            foregroundStarted = true;
+        } catch (Exception e) { android.util.Log.w("DONIX", "Unable to start playback service", e); }
+    }
+    private void stopPlaybackService() {
+        if (!foregroundStarted) return;
+        stopService(new Intent(this, PlaybackService.class));
+        foregroundStarted = false;
     }
     private void showNotification() {
         if (notificationManager == null || mediaSession == null) return;
@@ -116,13 +137,16 @@ public class MainActivity extends Activity {
                         .setShowActionsInCompactView(0, 1, 2));
         if (albumArtwork != null) builder.setLargeIcon(albumArtwork);
         if (Build.VERSION.SDK_INT >= 26) builder.setChannelId("donix_playback");
-        notificationManager.notify(MEDIA_NOTIFICATION_ID, builder.build());
+        Notification notification = builder.build();
+        PlaybackService.currentNotification = notification;
+        notificationManager.notify(MEDIA_NOTIFICATION_ID, notification);
     }
     @Override public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (requestCode == NOTIFICATION_PERMISSION_REQUEST && grantResults.length > 0
                 && grantResults[0] == PackageManager.PERMISSION_GRANTED && isPlaying) {
             showNotification();
+            startPlaybackService();
         }
     }
 
@@ -239,6 +263,7 @@ public class MainActivity extends Activity {
     }
     @Override protected void onDestroy() {
         if (pendingFiles != null) { pendingFiles.onReceiveValue(null); pendingFiles = null; }
+        stopPlaybackService();
         if (notificationManager != null) notificationManager.cancel(MEDIA_NOTIFICATION_ID);
         if (mediaSession != null) { mediaSession.setActive(false); mediaSession.release(); mediaSession = null; }
         if (webView != null) { webView.destroy(); webView = null; }
