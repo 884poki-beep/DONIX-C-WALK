@@ -2366,15 +2366,35 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     const title=(song?.title||filename).trim();
     const cover=song?.cover || (artworkNode && !artworkNode.hidden ? artworkNode.src : '') || '';
     const key=[title,artist,cover].join('\u0001');
-    if(key===lastKey)return;
+    if(key===lastKey){notifyAndroid();return;}
     lastKey=key;
     const artwork=cover?[{src:cover,sizes:'512x512',type:cover.startsWith('data:image/png')?'image/png':cover.startsWith('data:image/webp')?'image/webp':'image/jpeg'}]:[];
     try{navigator.mediaSession.metadata=new MediaMetadata({title,artist:artist||'DONIX C-WALK',album:'',artwork});}
     catch(e){try{navigator.mediaSession.metadata=new MediaMetadata({title,artist:artist||'DONIX C-WALK'});}catch(_){}}
+    notifyAndroid();
   }
+  // Synchronize the WebView player with Android's native MediaSession.
+  function notifyAndroid(){
+    try {
+      if (!window.DonixAndroid || typeof window.DonixAndroid.update !== 'function') return;
+      const song=currentSong();
+      const filename=(song?.name||titleNode.textContent||'').replace(/\.[^.]+$/,'').trim();
+      if (!filename || filename==='曲を選択してください') return;
+      window.DonixAndroid.update((song?.title||filename).trim(),(song?.artist||'dongurikobo').trim(),!player.paused && !player.ended);
+    } catch(e) { console.warn('Android media bridge:',e); }
+  }
+  window.donixNativeCommand=function(command){
+    try {
+      if(command==='play') { if(typeof doorOpen!=='undefined'&&doorOpen&&typeof setDoor==='function')setDoor(false);player.play().catch(()=>{}); }
+      else if(command==='pause') player.pause();
+      else if(command==='previous' && typeof songs!=='undefined' && songs.length && typeof load==='function')load(idx>0?idx-1:songs.length-1,true);
+      else if(command==='next' && typeof songs!=='undefined' && songs.length && typeof load==='function')load((idx+1)%songs.length,true);
+    } catch(e) { console.warn('Android media command:',e); }
+  };
   function syncPlayback(){
     try{navigator.mediaSession.playbackState=player.paused?'paused':'playing';}catch(e){}
     updatePosition();
+    notifyAndroid();
   }
   function updatePosition(){
     if(!navigator.mediaSession.setPositionState)return;
@@ -2391,7 +2411,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   setAction('seekbackward',details=>{player.currentTime=Math.max(0,(player.currentTime||0)-(details.seekOffset||10));});
   setAction('seekforward',details=>{if(Number.isFinite(player.duration))player.currentTime=Math.min(player.duration,(player.currentTime||0)+(details.seekOffset||10));});
   setAction('seekto',details=>{if(Number.isFinite(details.seekTime))player.currentTime=details.seekTime;});
-  ['play','pause','loadedmetadata','durationchange','seeked','ratechange'].forEach(event=>player.addEventListener(event,()=>{updateMetadata();syncPlayback();}));
+  ['play','playing','pause','ended','loadedmetadata','durationchange','seeked','ratechange'].forEach(event=>player.addEventListener(event,()=>{updateMetadata();syncPlayback();}));
   titleNode && new MutationObserver(updateMetadata).observe(titleNode,{childList:true,characterData:true,subtree:true});
   if(artworkNode)new MutationObserver(updateMetadata).observe(artworkNode,{attributes:true,attributeFilter:['src','hidden']});
   document.getElementById('files')?.addEventListener('change',()=>setTimeout(updateMetadata,800));
