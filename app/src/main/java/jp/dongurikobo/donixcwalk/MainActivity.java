@@ -8,6 +8,9 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.media.MediaMetadata;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.util.Base64;
 import android.media.session.MediaSession;
 import android.media.session.PlaybackState;
 import android.os.Build;
@@ -33,6 +36,7 @@ public class MainActivity extends Activity {
     private MediaSession mediaSession;
     private NotificationManager notificationManager;
     private boolean isPlaying = false;
+    private Bitmap albumArtwork;
     private String songTitle = "DONIX C-WALK", songArtist = "dongurikobo";
     private static final int MEDIA_NOTIFICATION_ID = 201;
     private static final String ACTION_PLAY = "jp.dongurikobo.donixcwalk.PLAY";
@@ -40,6 +44,19 @@ public class MainActivity extends Activity {
     private static final String ACTION_PREV = "jp.dongurikobo.donixcwalk.PREV";
     private static final String ACTION_NEXT = "jp.dongurikobo.donixcwalk.NEXT";
     private final class MediaBridge {
+        @JavascriptInterface public void artwork(String dataUrl) {
+            Bitmap bitmap = null;
+            try {
+                if (dataUrl != null && dataUrl.startsWith("data:image/") && dataUrl.length() < 500000) {
+                    String encoded = dataUrl.substring(dataUrl.indexOf(',') + 1);
+                    byte[] bytes = Base64.decode(encoded, Base64.DEFAULT);
+                    bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
+                }
+            } catch (Exception ignored) { }
+            final Bitmap result = bitmap;
+            runOnUiThread(() -> { albumArtwork = result; updateSession(); });
+        }
+
         @JavascriptInterface public void update(String title, String artist, boolean playing) {
             runOnUiThread(() -> {
                 songTitle = title == null || title.isEmpty() ? "DONIX C-WALK" : title;
@@ -55,9 +72,11 @@ public class MainActivity extends Activity {
     }
     private void updateSession() {
         if (mediaSession == null) return;
-        mediaSession.setMetadata(new MediaMetadata.Builder()
+        MediaMetadata.Builder metadata = new MediaMetadata.Builder()
                 .putString(MediaMetadata.METADATA_KEY_TITLE, songTitle)
-                .putString(MediaMetadata.METADATA_KEY_ARTIST, songArtist).build());
+                .putString(MediaMetadata.METADATA_KEY_ARTIST, songArtist);
+        if (albumArtwork != null) metadata.putBitmap(MediaMetadata.METADATA_KEY_ALBUM_ART, albumArtwork);
+        mediaSession.setMetadata(metadata.build());
         long actions = PlaybackState.ACTION_PLAY | PlaybackState.ACTION_PAUSE
                 | PlaybackState.ACTION_PLAY_PAUSE | PlaybackState.ACTION_SKIP_TO_PREVIOUS
                 | PlaybackState.ACTION_SKIP_TO_NEXT;
@@ -95,6 +114,7 @@ public class MainActivity extends Activity {
                 .addAction(android.R.drawable.ic_media_next, "Next", mediaAction(ACTION_NEXT, 3))
                 .setStyle(new Notification.MediaStyle().setMediaSession(mediaSession.getSessionToken())
                         .setShowActionsInCompactView(0, 1, 2));
+        if (albumArtwork != null) builder.setLargeIcon(albumArtwork);
         if (Build.VERSION.SDK_INT >= 26) builder.setChannelId("donix_playback");
         notificationManager.notify(MEDIA_NOTIFICATION_ID, builder.build());
     }
