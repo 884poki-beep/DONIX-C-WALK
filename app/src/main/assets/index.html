@@ -2348,7 +2348,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 <script id="cw-v142-media-session">
 /* Android media controls: metadata, artwork and transport buttons. */
 (()=>{
-  if (!('mediaSession' in navigator) || !('MediaMetadata' in window)) return;
+  const hasBrowserMediaSession = ('mediaSession' in navigator) && ('MediaMetadata' in window);
   const player=document.getElementById('audio');
   const titleNode=document.getElementById('track');
   const artworkNode=document.getElementById('cwPreviewImage');
@@ -2369,9 +2369,30 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     if(key===lastKey){notifyAndroid();return;}
     lastKey=key;
     const artwork=cover?[{src:cover,sizes:'512x512',type:cover.startsWith('data:image/png')?'image/png':cover.startsWith('data:image/webp')?'image/webp':'image/jpeg'}]:[];
-    try{navigator.mediaSession.metadata=new MediaMetadata({title,artist:artist||'DONIX C-WALK',album:'',artwork});}
-    catch(e){try{navigator.mediaSession.metadata=new MediaMetadata({title,artist:artist||'DONIX C-WALK'});}catch(_){}}
+    if(hasBrowserMediaSession){
+      try{navigator.mediaSession.metadata=new MediaMetadata({title,artist:artist||'DONIX C-WALK',album:'',artwork});}
+      catch(e){try{navigator.mediaSession.metadata=new MediaMetadata({title,artist:artist||'DONIX C-WALK'});}catch(_){}}
+    }
+    sendArtworkToAndroid(cover);
     notifyAndroid();
+  }
+  // Resize cover before passing through JavascriptInterface (avoids huge binder payloads).
+  let lastAndroidCover='';
+  function sendArtworkToAndroid(src){
+    if(!window.DonixAndroid || typeof window.DonixAndroid.artwork!=='function')return;
+    if(src===lastAndroidCover)return;
+    lastAndroidCover=src;
+    if(!src){try{window.DonixAndroid.artwork('');}catch(e){}return;}
+    const image=new Image();
+    image.onload=()=>{
+      try{
+        const canvas=document.createElement('canvas');canvas.width=256;canvas.height=256;
+        const ctx=canvas.getContext('2d');ctx.drawImage(image,0,0,256,256);
+        window.DonixAndroid.artwork(canvas.toDataURL('image/jpeg',0.7));
+      }catch(e){console.warn('Artwork bridge:',e);}
+    };
+    image.onerror=()=>{};
+    image.src=src;
   }
   // Synchronize the WebView player with Android's native MediaSession.
   function notifyAndroid(){
@@ -2392,17 +2413,17 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     } catch(e) { console.warn('Android media command:',e); }
   };
   function syncPlayback(){
-    try{navigator.mediaSession.playbackState=player.paused?'paused':'playing';}catch(e){}
+    if(hasBrowserMediaSession)try{navigator.mediaSession.playbackState=player.paused?'paused':'playing';}catch(e){}
     updatePosition();
     notifyAndroid();
   }
   function updatePosition(){
-    if(!navigator.mediaSession.setPositionState)return;
+    if(!hasBrowserMediaSession || !navigator.mediaSession.setPositionState)return;
     const duration=player.duration;
     if(!Number.isFinite(duration)||duration<=0)return;
     try{navigator.mediaSession.setPositionState({duration,playbackRate:player.playbackRate||1,position:Math.max(0,Math.min(duration,player.currentTime||0))});}catch(e){}
   }
-  function setAction(name,handler){try{navigator.mediaSession.setActionHandler(name,handler);}catch(e){}}
+  function setAction(name,handler){if(hasBrowserMediaSession)try{navigator.mediaSession.setActionHandler(name,handler);}catch(e){}}
   setAction('play',()=>{if(typeof doorOpen!=='undefined'&&doorOpen&&typeof setDoor==='function')setDoor(false);player.play().catch(()=>{});});
   setAction('pause',()=>player.pause());
   setAction('stop',()=>{player.pause();player.currentTime=0;});
