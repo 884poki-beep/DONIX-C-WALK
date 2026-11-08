@@ -1,6 +1,8 @@
 package jp.dongurikobo.donixcwalk;
 
 import android.app.Activity;
+import android.Manifest;
+import android.content.pm.PackageManager;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
@@ -26,6 +28,7 @@ import android.webkit.WebResourceRequest;
 
 public class MainActivity extends Activity {
     private static final int FILE_REQUEST = 101;
+    private static final int NOTIFICATION_PERMISSION_REQUEST = 102;
     private WebView webView;
     private MediaSession mediaSession;
     private NotificationManager notificationManager;
@@ -62,7 +65,13 @@ public class MainActivity extends Activity {
                 .setActions(actions)
                 .setState(isPlaying ? PlaybackState.STATE_PLAYING : PlaybackState.STATE_PAUSED,
                         PlaybackState.PLAYBACK_POSITION_UNKNOWN, isPlaying ? 1f : 0f).build());
-        if (isPlaying) showNotification();
+        if (isPlaying) {
+            if (Build.VERSION.SDK_INT < 33 || checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED) {
+                showNotification();
+            } else {
+                requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS}, NOTIFICATION_PERMISSION_REQUEST);
+            }
+        }
         else if (notificationManager != null) notificationManager.cancel(MEDIA_NOTIFICATION_ID);
     }
     private PendingIntent mediaAction(String action, int requestCode) {
@@ -89,6 +98,14 @@ public class MainActivity extends Activity {
         if (Build.VERSION.SDK_INT >= 26) builder.setChannelId("donix_playback");
         notificationManager.notify(MEDIA_NOTIFICATION_ID, builder.build());
     }
+    @Override public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == NOTIFICATION_PERMISSION_REQUEST && grantResults.length > 0
+                && grantResults[0] == PackageManager.PERMISSION_GRANTED && isPlaying) {
+            showNotification();
+        }
+    }
+
     @Override protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
         if (intent != null) handleMediaAction(intent.getAction());
@@ -109,6 +126,9 @@ public class MainActivity extends Activity {
             android.app.NotificationChannel channel = new android.app.NotificationChannel(
                     "donix_playback", "DONIX C-WALK 再生", NotificationManager.IMPORTANCE_LOW);
             notificationManager.createNotificationChannel(channel);
+        }
+        if (Build.VERSION.SDK_INT >= 33 && checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+            requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS}, NOTIFICATION_PERMISSION_REQUEST);
         }
         mediaSession = new MediaSession(this, "DONIX-C-WALK");
         mediaSession.setFlags(MediaSession.FLAG_HANDLES_MEDIA_BUTTONS | MediaSession.FLAG_HANDLES_TRANSPORT_CONTROLS);
