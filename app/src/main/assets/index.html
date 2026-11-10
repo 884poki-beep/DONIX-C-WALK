@@ -2870,7 +2870,6 @@ document.addEventListener('DOMContentLoaded',()=>{document.title='DONIX C-WALK v
 #donixFlow .df-art{width:100%;height:100%;object-fit:cover;display:block}
 #donixFlow .df-noart{display:grid;place-items:center;background:linear-gradient(145deg,#e3d4b9,#7d9fb0);color:#25394b;font-size:55px}
 #donixFlow .df-case{position:absolute;inset:0;width:100%;height:100%;object-fit:fill;pointer-events:none}
-#donixFlow .df-case-edge{position:absolute;inset:0;border:2px solid #e8f4ff6b;border-radius:8px;box-shadow:inset 0 0 10px #fff9,0 0 3px #fff5;pointer-events:none}
 #donixFlow #dfName{max-width:90vw;min-height:53px;text-align:center;font-size:14px;color:#e5edf8;overflow-wrap:anywhere;padding:0 10px;line-height:1.6}
 #donixFlow .df-actions{display:flex;gap:9px;align-items:center;justify-content:center;margin-top:12px;padding:0 10px;flex-wrap:wrap}
 #donixFlow button{background:#263d53;color:#fff;border:1px solid #a3bad0;border-radius:11px;padding:11px 16px;font-size:14px}#donixFlow #dfInsert{background:linear-gradient(#d4e6f6,#829eb7);color:#101e2a;font-weight:800}
@@ -2893,7 +2892,7 @@ function render(){const arr=library();stage.replaceChildren();if(!arr.length){na
 selected=Math.max(0,Math.min(selected,arr.length-1));const song=arr[selected];name.textContent=(selected+1)+' / '+arr.length+'　'+(song.name||'')+(song.artist?'　/　'+song.artist:'');
 for(let delta=-2;delta<=2;delta++){const i=selected+delta;if(i<0||i>=arr.length)continue;const item=arr[i],card=document.createElement('div');card.className='df-card';card.style.transform=`translate(-50%,-50%) translateX(${delta*66}%) rotateY(${delta*-43}deg) scale(${delta===0?1:.82})`;card.style.zIndex=String(10-Math.abs(delta));card.style.opacity=String(Math.abs(delta)===2?.55:1);
 const paper=document.createElement('div');paper.className='df-paper';const art=cover(item);if(art){const img=document.createElement('img');img.className='df-art';img.src=art;img.alt='ジャケット画像';paper.append(img)}else{const blank=document.createElement('div');blank.className='df-art df-noart';blank.textContent='♫';paper.append(blank)}card.append(paper);
-const caseImg=document.createElement('img');caseImg.className='df-case';caseImg.src='donix_clear_case.png';caseImg.alt='';card.append(caseImg);const edge=document.createElement('div');edge.className='df-case-edge';card.append(edge);
+const caseImg=document.createElement('img');caseImg.className='df-case';caseImg.src='donix_clear_case.png';caseImg.alt='';card.append(caseImg);
 card.onclick=()=>{if(Date.now()<ignoreClickUntil)return;if(delta===0)insert();else{selected=i;render()}};stage.append(card)}
 try{const a=document.getElementById('audio');now.textContent=a&&!a.paused?'♪ 再生中：'+(arr[typeof idx==='number'?idx:0]?.name||''):'左右にスワイプして曲を選択'}catch(_){now.textContent=''}
 }
