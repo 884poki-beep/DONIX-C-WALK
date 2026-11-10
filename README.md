@@ -2,9 +2,9 @@ DONIX C-WALK 📼
 
 レトロなカセットウォークマンを再現したAndroid音楽プレイヤー。
 
-📥 Download
+## 📥 Download
 
-""Download APK" (https://img.shields.io/badge/Download-Android_APK-brightgreen?style=for-the-badge&logo=android)" (https://github.com/884poki-beep/DONIX-C-WALK/releases/latest)
+[![Download APK](https://img.shields.io/badge/Download-Android_APK-brightgreen?style=for-the-badge&logo=android)](https://github.com/884poki-beep/DONIX-C-WALK/releases/latest)
 
 インストール方法
 
