@@ -4,7 +4,7 @@
 
 ## 📥 Download
 
-[![Download APK](https://img.shields.io/badge/Download-Android_APK-brightgreen?style=for-the-badge&logo=android)](https://github.com/884poki-beep/DONIX-C-WALK/releases/latest/download/DONIX-C-WALK-v1.0.12.apk)
+[![Download APK](https://img.shields.io/badge/Download-Android_APK-brightgreen?style=for-the-badge&logo=android)](https://github.com/884poki-beep/DONIX-C-WALK/releases/latest/download/app-release.apk)
 
 インストール方法
 
