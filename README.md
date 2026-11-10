@@ -1,3 +1,22 @@
+DONIX C-WALK 📼
+
+レトロなカセットウォークマンを再現したAndroid音楽プレイヤー。
+
+📥 Download
+
+""Download APK" (https://img.shields.io/badge/Download-Android_APK-brightgreen?style=for-the-badge&logo=android)" (https://github.com/884poki-beep/DONIX-C-WALK/releases/latest)
+
+インストール方法
+
+1. 「Download Android APK」ボタンを押します。
+2. Releasesページの「Assets」を開きます。
+3. APKファイルをダウンロードします。
+4. Androidスマートフォンにインストールします。
+
+Version: 1.0.12
+
+
+
 # DONIX C-WALK (Android) v1.0.0
 
 **dongurikobo** / Android cassette music player.
