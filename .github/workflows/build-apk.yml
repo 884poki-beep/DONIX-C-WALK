@@ -1,26 +1,45 @@
-name: Build Android APK
+name: Build Android Release APK
+
 on:
   workflow_dispatch:
   push:
     branches: [main, master]
+
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '17'
-      # GitHub ubuntu-latest already includes Android SDK; avoid sdkmanager setup failure.
+
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.9'
-      - name: Build APK
-        run: gradle :app:assembleDebug --no-daemon
+
+      - name: Restore signing key
+        env:
+          SIGNING_KEY: ${{ secrets.SIGNING_KEY }}
+        run: |
+          echo "$SIGNING_KEY" | base64 -d > "$RUNNER_TEMP/donix-release.jks"
+
+      - name: Build signed release APK
+        env:
+          KEYSTORE_FILE: ${{ runner.temp }}/donix-release.jks
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: gradle :app:assembleRelease --no-daemon
+
       - name: Rename APK
-        run: cp app/build/outputs/apk/debug/app-debug.apk DONIX-C-WALK-v1.0.12.apk
+        run: |
+          cp app/build/outputs/apk/release/app-release.apk DONIX-C-WALK-v1.0.12.apk
+
       - uses: actions/upload-artifact@v4
         with:
-          name: DONIX-C-WALK-v1.0.12-APK
+          name: DONIX-C-WALK-v1.0.12-Release
           path: DONIX-C-WALK-v1.0.12.apk
