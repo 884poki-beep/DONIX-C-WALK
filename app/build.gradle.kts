@@ -6,8 +6,8 @@ android {
         applicationId = "jp.dongurikobo.donixcwalk"
         minSdk = 26
         targetSdk = 28
-        versionCode = 9
-        versionName = "1.0.11"
+        versionCode = 11
+        versionName = "1.0.12"
     }
     buildTypes { release { isMinifyEnabled = false } }
     compileOptions { sourceCompatibility = JavaVersion.VERSION_17; targetCompatibility = JavaVersion.VERSION_17 }
