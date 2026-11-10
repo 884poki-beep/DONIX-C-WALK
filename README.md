@@ -5,7 +5,6 @@
 ## 📥 Download
 
 [![Download APK](https://img.shields.io/badge/Download-Android_APK-brightgreen?style=for-the-badge&logo=android)](https://github.com/884poki-beep/DONIX-C-WALK/releases/latest/download/app-release.apk)
-
 インストール方法
 
 1. 「Download Android APK」ボタンを押します。
@@ -13,7 +12,7 @@
 3. APKファイルをダウンロードします。
 4. Androidスマートフォンにインストールします。
 
-Version: 1.0.12
+Version: 1.0.14
 
 
 
