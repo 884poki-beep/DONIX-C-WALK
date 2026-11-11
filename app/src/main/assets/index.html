@@ -1597,53 +1597,7 @@ document.addEventListener('DOMContentLoaded',()=>{document.title='DONIX C-WALK v
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
 })();
 </script>
-<script id="donix-native-audio-v20">
-(function(){
-'use strict';
-if(!window.DonixAndroid||!window.DonixAndroid.nativePlay)return;
-const el=document.getElementById('audio');if(!el)return;
-const originalPlay=el.play.bind(el),originalPause=el.pause.bind(el);
-let generation=0,activeId='',nativeReady=false,desiredPlay=false;
-// Keep the original HTML player audible until the native player is ready.
-el.muted=false;
-function song(){try{return idx>=0?songs[idx]:null}catch(e){return null}}
-function idFor(s){return String(s.id||s.name||'')}
-function bytesToBase64(buf){let out='';const b=new Uint8Array(buf);for(let i=0;i<b.length;i++)out+=String.fromCharCode(b[i]);return btoa(out)}
-async function ensureFile(s,gen){
- const id=idFor(s);if(window.DonixAndroid.hasTrack(id))return true;
- if(!s.url)throw new Error('No audio URL');
- const response=await fetch(s.url);if(!response.ok)throw new Error('Cannot read track');
- const blob=await response.blob();if(gen!==generation)return false;
- if(!window.DonixAndroid.beginTrack(id))throw new Error('Cannot create native track');
- const chunk=48*1024;
- for(let pos=0;pos<blob.size;pos+=chunk){
-   if(gen!==generation)return false;
-   const data=await blob.slice(pos,pos+chunk).arrayBuffer();
-   if(!window.DonixAndroid.appendTrack(id,bytesToBase64(data)))throw new Error('Transfer failed');
-   if(pos%(chunk*16)===0)await new Promise(r=>setTimeout(r,0));
- }
- return true;
-}
-async function nativeStart(){
- const s=song();if(!s)return;
- const id=idFor(s),gen=++generation;activeId=id;desiredPlay=true;nativeReady=false;
- // Native transfer may take several seconds. Do not silence WebView during transfer.
- el.muted=false;
- try{
-   if(await ensureFile(s,gen)&&gen===generation&&desiredPlay){
-     window.DonixAndroid.nativeVolume(Math.round(el.volume*100));
-     window.DonixAndroid.nativePlay(id,Math.round((el.currentTime||0)*1000));
-     // Native startup is asynchronous. Keep HTML audible briefly to avoid silence.
-     setTimeout(()=>{if(gen===generation&&desiredPlay){nativeReady=true;el.muted=true;}},1800);
-   }
- }catch(e){console.warn('Native unavailable; continuing HTML playback',e);if(gen===generation){nativeReady=false;el.muted=false;}}
-}
-el.play=function(){const s=song();if(s)nativeStart();return originalPlay()};
-el.pause=function(){desiredPlay=false;generation++;nativeReady=false;el.muted=false;window.DonixAndroid.nativePause();return originalPause()};
-el.addEventListener('seeked',()=>{if(nativeReady&&activeId)window.DonixAndroid.nativeSeek(Math.round((el.currentTime||0)*1000))});
-el.addEventListener('volumechange',()=>{if(nativeReady)window.DonixAndroid.nativeVolume(Math.round(el.volume*100))});
-})();
-</script>
+<!-- v1.0.21: native-audio bridge disabled; use reliable HTML audio playback -->
 </body></html>
 <style id="cw-v47-lower-reel-alignment">
 /* Align the lower animated hub to the printed reel center; upper reel unchanged. */
