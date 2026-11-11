@@ -185,6 +185,11 @@ public class MainActivity extends Activity {
         mediaSession.setActive(true);
         handleMediaAction(getIntent() == null ? null : getIntent().getAction());
         webView = new WebView(this);
+        // Keep the WebView renderer at high priority when the Activity is backgrounded.
+        // This is best-effort: Android may still suspend WebView audio on some devices.
+        if (Build.VERSION.SDK_INT >= 26) {
+            webView.setRendererPriorityPolicy(WebView.RENDERER_PRIORITY_IMPORTANT, true);
+        }
         webView.addJavascriptInterface(new MediaBridge(), "DonixAndroid");
         setContentView(webView);
         WebSettings s = webView.getSettings();
@@ -193,6 +198,8 @@ public class MainActivity extends Activity {
         s.setAllowFileAccess(true);
         s.setAllowContentAccess(true);
         s.setMediaPlaybackRequiresUserGesture(false);
+        // Keep the off-screen renderer ready while the foreground media service runs.
+        if (Build.VERSION.SDK_INT >= 23) s.setOffscreenPreRaster(true);
         webView.setWebChromeClient(new WebChromeClient() {
             @Override public boolean onShowFileChooser(WebView view, ValueCallback<Uri[]> callback, FileChooserParams params) {
                 if (pendingFiles != null) pendingFiles.onReceiveValue(null);
