@@ -1,6 +1,8 @@
 package jp.dongurikobo.donixcwalk;
 
 import android.app.Activity;
+import java.io.File;
+import java.io.FileOutputStream;
 import android.Manifest;
 import android.content.pm.PackageManager;
 import android.app.Notification;
@@ -46,6 +48,15 @@ public class MainActivity extends Activity {
     private static final String ACTION_PREV = "jp.dongurikobo.donixcwalk.PREV";
     private static final String ACTION_NEXT = "jp.dongurikobo.donixcwalk.NEXT";
     private final class MediaBridge {
+
+        @JavascriptInterface public boolean hasTrack(String id){return trackFile(id).exists()&&trackFile(id).length()>0;}
+        @JavascriptInterface public boolean beginTrack(String id){try{File f=trackFile(id);if(f.exists())f.delete();return f.createNewFile();}catch(Exception e){return false;}}
+        @JavascriptInterface public boolean appendTrack(String id,String encoded){try(FileOutputStream out=new FileOutputStream(trackFile(id),true)){out.write(Base64.decode(encoded,Base64.DEFAULT));return true;}catch(Exception e){android.util.Log.e("DONIX","transfer",e);return false;}}
+        @JavascriptInterface public void nativePlay(String id,int millis){runOnUiThread(()->sendNative(PlaybackService.PLAY,id,millis));}
+        @JavascriptInterface public void nativePause(){runOnUiThread(()->sendNative(PlaybackService.PAUSE,null,0));}
+        @JavascriptInterface public void nativeSeek(int millis){runOnUiThread(()->sendNative(PlaybackService.SEEK,null,millis));}
+        @JavascriptInterface public void nativeVolume(int value){runOnUiThread(()->sendNative(PlaybackService.VOLUME,null,value));}
+
         @JavascriptInterface public void artwork(String dataUrl) {
             Bitmap bitmap = null;
             try {
@@ -67,6 +78,17 @@ public class MainActivity extends Activity {
                 updateSession();
             });
         }
+    }
+    private File trackFile(String id){
+        try{byte[] hash=java.security.MessageDigest.getInstance("SHA-256").digest(id.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            StringBuilder name=new StringBuilder();for(byte b:hash)name.append(String.format(java.util.Locale.US,"%02x",b&255));
+            File dir=new File(getFilesDir(),"native_tracks");if(!dir.exists())dir.mkdirs();return new File(dir,name.toString()+".audio");
+        }catch(Exception e){throw new IllegalStateException(e);}
+    }
+    private void sendNative(String action,String id,int pos){
+        Intent intent=new Intent(this,PlaybackService.class).setAction(action);
+        if(id!=null)intent.putExtra("file",trackFile(id).getAbsolutePath());intent.putExtra("position",pos);
+        try{if(Build.VERSION.SDK_INT>=26)startForegroundService(intent);else startService(intent);}catch(Exception e){android.util.Log.e("DONIX","native command",e);}
     }
     private void runPlayerCommand(String command) {
         if (webView == null) return;
@@ -95,8 +117,7 @@ public class MainActivity extends Activity {
             }
         }
         else {
-            stopPlaybackService();
-            if (notificationManager != null) notificationManager.cancel(MEDIA_NOTIFICATION_ID);
+            // Native audio is controlled separately from WebView state.
         }
     }
     private PendingIntent mediaAction(String action, int requestCode) {
@@ -270,8 +291,7 @@ public class MainActivity extends Activity {
     }
     @Override protected void onDestroy() {
         if (pendingFiles != null) { pendingFiles.onReceiveValue(null); pendingFiles = null; }
-        stopPlaybackService();
-        if (notificationManager != null) notificationManager.cancel(MEDIA_NOTIFICATION_ID);
+        // Native audio service remains alive when Activity is destroyed.
         if (mediaSession != null) { mediaSession.setActive(false); mediaSession.release(); mediaSession = null; }
         if (webView != null) { webView.destroy(); webView = null; }
         super.onDestroy();
