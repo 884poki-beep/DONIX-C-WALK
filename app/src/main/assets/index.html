@@ -1300,12 +1300,9 @@ html body #v4Stage.cw-closing .v4-bay .cw64-cassette {
   // Remove any artwork-layer hit testing over the lower media controls.
   const stage=document.getElementById('v4Stage');
   if(stage){stage.style.isolation='isolate';}
-  // If a user-selected song is paused, use the native audio control path.
-  const play=document.getElementById('play');
-  if(play)play.addEventListener('click',function(){
-   if(!audio || !audio.src || !audio.paused)return;
-   setTimeout(()=>{if(audio.paused && audio.src)audio.play().catch(()=>{});},30);
-  });
+  // Playback is handled by the original play.onclick=toggle handler.
+  // Do not attach an additional delayed play() listener: it restarts audio
+  // immediately after the user presses pause.
  }
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',bind,{once:true});else bind();
 })();
@@ -2104,12 +2101,9 @@ document.querySelectorAll('header small').forEach(e=>e.textContent=e.textContent
   // Remove any artwork-layer hit testing over the lower media controls.
   const stage=document.getElementById('v4Stage');
   if(stage){stage.style.isolation='isolate';}
-  // If a user-selected song is paused, use the native audio control path.
-  const play=document.getElementById('play');
-  if(play)play.addEventListener('click',function(){
-   if(!audio || !audio.src || !audio.paused)return;
-   setTimeout(()=>{if(audio.paused && audio.src)audio.play().catch(()=>{});},30);
-  });
+  // Playback is handled by the original play.onclick=toggle handler.
+  // Do not attach an additional delayed play() listener: it restarts audio
+  // immediately after the user presses pause.
  }
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',bind,{once:true});else bind();
 })();
