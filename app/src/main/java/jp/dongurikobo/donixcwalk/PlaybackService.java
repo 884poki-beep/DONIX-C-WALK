@@ -9,7 +9,7 @@ import java.io.*;
 /** Owns actual audio playback independent of the WebView renderer. */
 public final class PlaybackService extends Service {
     static final String CHANNEL="donix_playback";
-    static final String PLAY="native.play", PAUSE="native.pause", SEEK="native.seek", VOLUME="native.volume", STOP="native.stop";
+    static final String PLAY="native.play", PAUSE="native.pause", SEEK="native.seek", VOLUME="native.volume", STOP="native.stop", WEB_PLAY="web.play", WEB_PAUSE="web.pause";
     static volatile Notification currentNotification;
     private MediaPlayer player;
     private PowerManager.WakeLock wakeLock;
@@ -52,6 +52,8 @@ public final class PlaybackService extends Service {
         startForeground(MainActivity.MEDIA_NOTIFICATION_ID,notification());
         if(i!=null){String action=i.getAction();if(PLAY.equals(action))prepare(i.getStringExtra("file"),i.getIntExtra("position",0),true);
             else if(PAUSE.equals(action))pause();
+            else if(WEB_PLAY.equals(action)){if(wakeLock!=null&&!wakeLock.isHeld())wakeLock.acquire();}
+            else if(WEB_PAUSE.equals(action)){releaseWake();}
             else if(SEEK.equals(action))seek(i.getIntExtra("position",0));
             else if(VOLUME.equals(action)){volume=i.getIntExtra("volume",80);if(player!=null)player.setVolume(volume/100f,volume/100f);}
             else if(STOP.equals(action)){pause();releasePlayer();currentFile="";stopSelf();}

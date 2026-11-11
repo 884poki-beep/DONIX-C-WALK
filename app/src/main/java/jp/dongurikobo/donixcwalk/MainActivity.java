@@ -43,6 +43,7 @@ public class MainActivity extends Activity {
     private String songTitle = "DONIX C-WALK", songArtist = "dongurikobo";
     static final int MEDIA_NOTIFICATION_ID = 201;
     private boolean foregroundStarted = false;
+    private boolean webAudioPlaying = false;
     private static final String ACTION_PLAY = "jp.dongurikobo.donixcwalk.PLAY";
     private static final String ACTION_PAUSE = "jp.dongurikobo.donixcwalk.PAUSE";
     private static final String ACTION_PREV = "jp.dongurikobo.donixcwalk.PREV";
@@ -75,6 +76,10 @@ public class MainActivity extends Activity {
                 songTitle = title == null || title.isEmpty() ? "DONIX C-WALK" : title;
                 songArtist = artist == null || artist.isEmpty() ? "dongurikobo" : artist;
                 isPlaying = playing;
+                if (webAudioPlaying != playing) {
+                    webAudioPlaying = playing;
+                    sendNative(playing ? PlaybackService.WEB_PLAY : PlaybackService.WEB_PAUSE, null, 0);
+                }
                 updateSession();
             });
         }
@@ -291,6 +296,7 @@ public class MainActivity extends Activity {
     }
     @Override protected void onDestroy() {
         if (pendingFiles != null) { pendingFiles.onReceiveValue(null); pendingFiles = null; }
+        if (webAudioPlaying) sendNative(PlaybackService.WEB_PAUSE, null, 0);
         // Native audio service remains alive when Activity is destroyed.
         if (mediaSession != null) { mediaSession.setActive(false); mediaSession.release(); mediaSession = null; }
         if (webView != null) { webView.destroy(); webView = null; }
