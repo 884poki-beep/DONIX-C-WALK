@@ -1597,6 +1597,56 @@ document.addEventListener('DOMContentLoaded',()=>{document.title='DONIX C-WALK v
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
 })();
 </script>
+<script id="donix-native-audio-v19">
+(function(){
+'use strict';
+if(!window.DonixAndroid||!window.DonixAndroid.nativePlay)return;
+const el=document.getElementById('audio');if(!el)return;
+// HTML audio stays silent and provides the existing cassette animation and lyrics.
+// The Android foreground service independently produces the actual sound.
+el.muted=true;
+const originalPlay=el.play.bind(el),originalPause=el.pause.bind(el);
+let generation=0,activeId='',transferBusy=false,desiredPlay=false,internalPause=false;
+function song(){try{return idx>=0?songs[idx]:null}catch(e){return null}}
+function idFor(s){return String(s.id||s.name||'')}
+function bytesToBase64(buf){let out='';const b=new Uint8Array(buf);for(let i=0;i<b.length;i++)out+=String.fromCharCode(b[i]);return btoa(out)}
+async function ensureFile(s,gen){
+ const id=idFor(s);if(window.DonixAndroid.hasTrack(id))return true;
+ const blob=await fetch(s.url).then(r=>r.blob());
+ if(gen!==generation)return false;
+ if(!window.DonixAndroid.beginTrack(id))throw new Error('Unable to initialize native audio');
+ const chunk=48*1024;
+ for(let pos=0;pos<blob.size;pos+=chunk){
+   if(gen!==generation)return false;
+   const data=await blob.slice(pos,pos+chunk).arrayBuffer();
+   if(!window.DonixAndroid.appendTrack(id,bytesToBase64(data)))throw new Error('Native audio transfer failed');
+   if(pos%(chunk*16)===0)await new Promise(r=>setTimeout(r,0));
+ }
+ return true;
+}
+async function nativeStart(){
+ const s=song();if(!s)return;
+ const id=idFor(s),gen=++generation;activeId=id;desiredPlay=true;
+ try{
+  if(await ensureFile(s,gen)&&gen===generation&&desiredPlay){
+   window.DonixAndroid.nativeVolume(Math.round(el.volume*100));
+   window.DonixAndroid.nativePlay(id,Math.round((el.currentTime||0)*1000));
+  }
+ }catch(e){console.error('Native playback:',e);}
+}
+// Existing controls call audio.play/pause, so intercept those centrally.
+el.play=function(){
+ const s=song();if(s){nativeStart();}
+ el.muted=true;return originalPlay();
+};
+el.pause=function(){desiredPlay=false;generation++;window.DonixAndroid.nativePause();return originalPause()};
+el.addEventListener('seeked',()=>{if(activeId)window.DonixAndroid.nativeSeek(Math.round((el.currentTime||0)*1000))});
+el.addEventListener('volumechange',()=>{el.muted=true;window.DonixAndroid.nativeVolume(Math.round(el.volume*100))});
+// When the WebView is backgrounded, Android MediaPlayer continues on its own.
+// When returning to the app, align the visual clock with native playback in a later release.
+window.addEventListener('pagehide',()=>{});
+})();
+</script>
 </body></html>
 <style id="cw-v47-lower-reel-alignment">
 /* Align the lower animated hub to the printed reel center; upper reel unchanged. */
@@ -2688,6 +2738,56 @@ document.addEventListener('DOMContentLoaded',()=>{document.title='DONIX C-WALK v
 #v4Stage:not(.cw-v100-playing) #v4Door .cw101-wheel{animation-play-state:paused!important}
 </style>
 <script id="cw-v149-version">document.addEventListener('DOMContentLoaded',()=>{document.title='DONIX C-WALK v14.9';document.querySelectorAll('header small').forEach(e=>e.textContent=e.textContent.replace(/v\d+\.\d+/g,'v14.9'));});</script>
+<script id="donix-native-audio-v19">
+(function(){
+'use strict';
+if(!window.DonixAndroid||!window.DonixAndroid.nativePlay)return;
+const el=document.getElementById('audio');if(!el)return;
+// HTML audio stays silent and provides the existing cassette animation and lyrics.
+// The Android foreground service independently produces the actual sound.
+el.muted=true;
+const originalPlay=el.play.bind(el),originalPause=el.pause.bind(el);
+let generation=0,activeId='',transferBusy=false,desiredPlay=false,internalPause=false;
+function song(){try{return idx>=0?songs[idx]:null}catch(e){return null}}
+function idFor(s){return String(s.id||s.name||'')}
+function bytesToBase64(buf){let out='';const b=new Uint8Array(buf);for(let i=0;i<b.length;i++)out+=String.fromCharCode(b[i]);return btoa(out)}
+async function ensureFile(s,gen){
+ const id=idFor(s);if(window.DonixAndroid.hasTrack(id))return true;
+ const blob=await fetch(s.url).then(r=>r.blob());
+ if(gen!==generation)return false;
+ if(!window.DonixAndroid.beginTrack(id))throw new Error('Unable to initialize native audio');
+ const chunk=48*1024;
+ for(let pos=0;pos<blob.size;pos+=chunk){
+   if(gen!==generation)return false;
+   const data=await blob.slice(pos,pos+chunk).arrayBuffer();
+   if(!window.DonixAndroid.appendTrack(id,bytesToBase64(data)))throw new Error('Native audio transfer failed');
+   if(pos%(chunk*16)===0)await new Promise(r=>setTimeout(r,0));
+ }
+ return true;
+}
+async function nativeStart(){
+ const s=song();if(!s)return;
+ const id=idFor(s),gen=++generation;activeId=id;desiredPlay=true;
+ try{
+  if(await ensureFile(s,gen)&&gen===generation&&desiredPlay){
+   window.DonixAndroid.nativeVolume(Math.round(el.volume*100));
+   window.DonixAndroid.nativePlay(id,Math.round((el.currentTime||0)*1000));
+  }
+ }catch(e){console.error('Native playback:',e);}
+}
+// Existing controls call audio.play/pause, so intercept those centrally.
+el.play=function(){
+ const s=song();if(s){nativeStart();}
+ el.muted=true;return originalPlay();
+};
+el.pause=function(){desiredPlay=false;generation++;window.DonixAndroid.nativePause();return originalPause()};
+el.addEventListener('seeked',()=>{if(activeId)window.DonixAndroid.nativeSeek(Math.round((el.currentTime||0)*1000))});
+el.addEventListener('volumechange',()=>{el.muted=true;window.DonixAndroid.nativeVolume(Math.round(el.volume*100))});
+// When the WebView is backgrounded, Android MediaPlayer continues on its own.
+// When returning to the app, align the visual clock with native playback in a later release.
+window.addEventListener('pagehide',()=>{});
+})();
+</script>
 </body></html>
 <script>document.title="DONIX C-WALK v12.1";document.querySelectorAll("header small").forEach(e=>e.textContent=e.textContent.replace(/v\d+\.\d+/g,"v12.1"));</script>
 
