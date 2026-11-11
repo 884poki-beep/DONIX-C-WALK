@@ -87,11 +87,11 @@ public class MainActivity extends Activity {
                 .setState(isPlaying ? PlaybackState.STATE_PLAYING : PlaybackState.STATE_PAUSED,
                         PlaybackState.PLAYBACK_POSITION_UNKNOWN, isPlaying ? 1f : 0f).build());
         if (isPlaying) {
+            // Foreground playback must not depend on notification permission.
+            // Android can run a foreground service even when notification permission is denied.
+            startPlaybackService();
             if (Build.VERSION.SDK_INT < 33 || checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED) {
                 showNotification();
-                startPlaybackService();
-            } else {
-                requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS}, NOTIFICATION_PERMISSION_REQUEST);
             }
         }
         else {
