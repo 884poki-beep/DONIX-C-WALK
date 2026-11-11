@@ -10,8 +10,8 @@ android {
         applicationId = "jp.dongurikobo.donixcwalk"
         minSdk = 26
         targetSdk = 35
-        versionCode = 21
-        versionName = "1.0.22"
+        versionCode = 22
+        versionName = "1.0.23"
     }
 
     signingConfigs {
