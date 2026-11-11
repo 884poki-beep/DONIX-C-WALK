@@ -1,52 +1,63 @@
 package jp.dongurikobo.donixcwalk;
 
-import android.app.Service;
-import android.app.Notification;
-import android.app.NotificationChannel;
-import android.app.NotificationManager;
-import android.content.Intent;
-import android.os.Build;
-import android.os.IBinder;
-import android.os.PowerManager;
+import android.app.*;
+import android.content.*;
+import android.media.*;
+import android.os.*;
+import java.io.*;
 
-/** Foreground process protection for the WebView-based audio player. */
+/** Owns actual audio playback independent of the WebView renderer. */
 public final class PlaybackService extends Service {
+    static final String CHANNEL="donix_playback";
+    static final String PLAY="native.play", PAUSE="native.pause", SEEK="native.seek", VOLUME="native.volume", STOP="native.stop";
     static volatile Notification currentNotification;
-    private PowerManager.WakeLock playbackWakeLock;
-    @Override public void onCreate() {
-        super.onCreate();
-        if (Build.VERSION.SDK_INT >= 26) {
-            NotificationManager manager = getSystemService(NotificationManager.class);
-            manager.createNotificationChannel(new NotificationChannel("donix_playback", "DONIX C-WALK 再生", NotificationManager.IMPORTANCE_LOW));
-        }
+    private MediaPlayer player;
+    private PowerManager.WakeLock wakeLock;
+    private String currentFile="";
+    private boolean wantedPlay=false;
+    private int volume=80;
+    private final Handler handler=new Handler(Looper.getMainLooper());
+    private final Runnable ticker=new Runnable(){@Override public void run(){
+        if(player!=null){try{if(player.isPlaying()&&player.getDuration()>0&&player.getCurrentPosition()>=player.getDuration()-350){
+            // The next track is requested from the UI when it is available.
+        }}catch(Exception ignored){}}
+        handler.postDelayed(this,1500);
+    }};
+    @Override public void onCreate(){super.onCreate();
+        if(Build.VERSION.SDK_INT>=26)getSystemService(NotificationManager.class).createNotificationChannel(new NotificationChannel(CHANNEL,"DONIX C-WALK 再生",NotificationManager.IMPORTANCE_LOW));
+        PowerManager pm=(PowerManager)getSystemService(POWER_SERVICE);
+        if(pm!=null){wakeLock=pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK,"DONIX:CWalkAudio");wakeLock.setReferenceCounted(false);}
+        handler.post(ticker);
     }
-    @Override public int onStartCommand(Intent intent, int flags, int startId) {
-        Notification notification = currentNotification;
-        if (notification == null) {
-            Notification.Builder builder = new Notification.Builder(this)
-                    .setSmallIcon(android.R.drawable.ic_media_play)
-                    .setContentTitle("DONIX C-WALK")
-                    .setContentText("音楽を再生中")
-                    .setOngoing(true);
-            if (Build.VERSION.SDK_INT >= 26) builder.setChannelId("donix_playback");
-            notification = builder.build();
+    private Notification notification(){Notification n=currentNotification;if(n!=null)return n;
+        Notification.Builder b=new Notification.Builder(this).setSmallIcon(android.R.drawable.ic_media_play).setContentTitle("DONIX C-WALK").setContentText("音楽を再生中").setOngoing(true);
+        if(Build.VERSION.SDK_INT>=26)b.setChannelId(CHANNEL);return b.build();}
+    private void prepare(String path, int pos, boolean autoplay){
+        if(path==null||path.isEmpty())return;
+        if(path.equals(currentFile)&&player!=null){seek(pos);if(autoplay)resume();return;}
+        releasePlayer();currentFile=path;
+        try{
+            player=new MediaPlayer();player.setAudioAttributes(new AudioAttributes.Builder().setUsage(AudioAttributes.USAGE_MEDIA).setContentType(AudioAttributes.CONTENT_TYPE_MUSIC).build());
+            player.setDataSource(path);player.setOnPreparedListener(mp->{mp.setVolume(volume/100f,volume/100f);if(pos>0)mp.seekTo(pos);if(autoplay)resume();});
+            player.setOnCompletionListener(mp->{wantedPlay=false;releaseWake();sendBroadcast(new Intent("jp.dongurikobo.donixcwalk.TRACK_ENDED").setPackage(getPackageName()));});
+            player.prepareAsync();
+        }catch(Exception ex){android.util.Log.e("DONIX","Native playback failed",ex);releasePlayer();}
+    }
+    private void seek(int pos){try{if(player!=null)player.seekTo(Math.max(0,pos));}catch(Exception ignored){}}
+    private void resume(){wantedPlay=true;try{if(player!=null){player.start();if(wakeLock!=null&&!wakeLock.isHeld())wakeLock.acquire();}}catch(Exception ex){android.util.Log.w("DONIX","start",ex);}}
+    private void pause(){wantedPlay=false;try{if(player!=null&&player.isPlaying())player.pause();}catch(Exception ignored){}releaseWake();}
+    private void releaseWake(){if(wakeLock!=null&&wakeLock.isHeld())wakeLock.release();}
+    private void releasePlayer(){if(player!=null){try{player.reset();player.release();}catch(Exception ignored){}player=null;}}
+    @Override public int onStartCommand(Intent i,int flags,int startId){
+        startForeground(MainActivity.MEDIA_NOTIFICATION_ID,notification());
+        if(i!=null){String action=i.getAction();if(PLAY.equals(action))prepare(i.getStringExtra("file"),i.getIntExtra("position",0),true);
+            else if(PAUSE.equals(action))pause();
+            else if(SEEK.equals(action))seek(i.getIntExtra("position",0));
+            else if(VOLUME.equals(action)){volume=i.getIntExtra("volume",80);if(player!=null)player.setVolume(volume/100f,volume/100f);}
+            else if(STOP.equals(action)){pause();releasePlayer();currentFile="";stopSelf();}
         }
-        startForeground(MainActivity.MEDIA_NOTIFICATION_ID, notification);
-        // Keep the CPU running while the WebView audio player is active and screen is off.
-        if (playbackWakeLock == null) {
-            PowerManager powerManager = (PowerManager) getSystemService(POWER_SERVICE);
-            if (powerManager != null) {
-                playbackWakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "DONIX:CWalkPlayback");
-                playbackWakeLock.setReferenceCounted(false);
-            }
-        }
-        if (playbackWakeLock != null && !playbackWakeLock.isHeld()) playbackWakeLock.acquire();
         return START_STICKY;
     }
-    @Override public void onDestroy() {
-        if (playbackWakeLock != null && playbackWakeLock.isHeld()) playbackWakeLock.release();
-        stopForeground(true);
-        super.onDestroy();
-    }
-    @Override public IBinder onBind(Intent intent) { return null; }
+    @Override public void onDestroy(){handler.removeCallbacks(ticker);pause();releasePlayer();stopForeground(true);super.onDestroy();}
+    @Override public IBinder onBind(Intent i){return null;}
 }
