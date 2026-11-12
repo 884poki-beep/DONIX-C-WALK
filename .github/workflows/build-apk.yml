@@ -37,9 +37,9 @@ jobs:
 
       - name: Rename APK
         run: |
-          cp app/build/outputs/apk/release/app-release.apk DONIX-C-WALK-v1.0.12.apk
+          cp app/build/outputs/apk/release/app-release.apk DONIX-C-WALK-v1.0.25.apk
 
       - uses: actions/upload-artifact@v4
         with:
-          name: DONIX-C-WALK-v1.0.12-Release
-          path: DONIX-C-WALK-v1.0.12.apk
+          name: DONIX-C-WALK-v1.0.25-Release
+          path: DONIX-C-WALK-v1.0.25.apk
