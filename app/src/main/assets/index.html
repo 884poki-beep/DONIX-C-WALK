@@ -3145,15 +3145,35 @@ document.addEventListener('DOMContentLoaded',()=>{document.title='DONIX C-WALK v
 #v4Stage #v4Door .cw101-reel.two{top:66.7%!important}
 #v4Stage.open #v4Door .cw101-reel{display:none!important;visibility:hidden!important}
 </style>
-<script>document.addEventListener('DOMContentLoaded',()=>{document.title='DONIX C-WALK v15.3';document.querySelectorAll('header small').forEach(e=>e.textContent=e.textContent.replace(/v\d+\.\d+/g,'v15.3'));});</script>
-\n<!-- DONIX CASE FLOW v1.0.9: closed-deck touch, transparent case with embedded album art -->
+<script>document.addEventListener('DOMContentLoaded',()=>{document.title='DONIX C-WALK v15.4';document.querySelectorAll('header small').forEach(e=>e.textContent=e.textContent.replace(/v\d+\.\d+/g,'v15.4'));});</script>
+\n<!-- DONIX CASE FLOW v1.1.0: closed-deck touch, transparent case with embedded album art -->
 <style id="donix-case-flow-style">
 #donixFlow{position:fixed;inset:0;z-index:2147483600;display:none;flex-direction:column;align-items:center;justify-content:center;overflow:hidden;background:radial-gradient(ellipse at 50% 32%,#435369 0%,#151e2b 66%,#080c13 100%);color:#fff;font-family:system-ui,sans-serif}
 #donixFlow.open{display:flex}#donixFlow h2{position:absolute;top:5%;margin:0;font-size:clamp(21px,5.2vw,31px);letter-spacing:.18em}#donixFlow .df-hint{position:absolute;top:12%;font-size:13px;color:#c2d1e0;text-align:center;padding:0 20px}
 #donixFlow .df-stage{position:relative;width:100%;height:min(58vh,490px);perspective:1100px;touch-action:none;user-select:none;overflow:visible}
 #donixFlow .df-card{position:absolute;top:50%;left:50%;width:min(52vw,245px);aspect-ratio:3/4;transform-style:preserve-3d;transition:none;cursor:pointer;filter:drop-shadow(0 14px 16px #0009);border-radius:5px;overflow:hidden;background:transparent}
-#donixFlow .df-paper{position:absolute;inset:8% 11% 6%;background:#f4f4f2;box-shadow:0 0 4px #0005;overflow:hidden;display:flex;flex-direction:column}
+#donixFlow .df-paper{position:absolute;inset:8% 11% 6%;background:#f4f4f2;box-shadow:0 0 4px #0005;overflow:hidden;display:block}
+#donixFlow .df-picture{position:absolute;inset:0;overflow:hidden}
 #donixFlow .df-art{width:100%;height:100%;object-fit:cover;display:block}
+/* DONIX title/artist lettering is drawn on top of the paper, below the transparent case. */
+#donixFlow .df-caption{position:absolute;left:0;right:0;z-index:2;pointer-events:none;text-align:center;display:flex;justify-content:center;overflow:hidden;overflow-wrap:anywhere;line-height:1.18}
+#donixFlow .df-caption-text{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-clamp:2;overflow:hidden;width:100%;white-space:normal;text-wrap:balance}
+#donixFlow .df-top{top:0;min-height:22%;align-items:flex-start;padding:9px 5px 13px;color:var(--df-top-ink,#fff);background:linear-gradient(to bottom,var(--df-top-shade,#000b),transparent);text-shadow:0 1px 3px var(--df-top-shadow,#000)}
+#donixFlow .df-bottom{bottom:0;min-height:23%;align-items:flex-end;padding:13px 5px 8px;color:var(--df-bottom-ink,#fff);background:linear-gradient(to top,var(--df-bottom-shade,#000b),transparent);text-shadow:0 1px 3px var(--df-bottom-shadow,#000)}
+#donixFlow .df-top .df-caption-text{font-size:var(--df-title-size,15px);font-weight:900;letter-spacing:.035em}
+#donixFlow .df-bottom .df-caption-text{font-size:var(--df-artist-size,11px);font-weight:750;letter-spacing:.08em}
+#donixFlow .df-type-0 .df-caption{font-family:system-ui,'Noto Sans JP',sans-serif}
+#donixFlow .df-type-1 .df-caption{font-family:'Noto Serif CJK JP','Noto Serif JP',serif;letter-spacing:.05em}
+#donixFlow .df-type-2 .df-caption{font-family:'sans-serif-condensed',sans-serif;font-stretch:condensed;letter-spacing:.13em}
+#donixFlow .df-type-3 .df-caption{font-family:monospace;letter-spacing:.02em}
+#donixFlow .df-type-4 .df-caption{font-family:'sans-serif-black',sans-serif;font-weight:900;letter-spacing:-.025em}
+#donixFlow .df-type-5 .df-caption{font-family:'sans-serif-rounded',system-ui,sans-serif;letter-spacing:.095em}
+#donixFlow .df-type-6 .df-caption{font-family:'Noto Serif JP',serif;font-style:italic;letter-spacing:.045em}
+#donixFlow .df-type-7 .df-caption{font-family:'sans-serif-light',sans-serif;font-weight:600;letter-spacing:.16em}
+#donixFlow.hide-captions .df-caption{display:none}
+#donixFlow #dfLabelToggle{position:absolute;top:18%;right:5%;z-index:2;font-size:12px;line-height:1.25;padding:7px 11px;border-radius:20px;background:#1a2f46cf;border:1px solid #91aabd}
+#donixFlow #dfLabelToggle[aria-pressed="false"]{color:#c1cbd5;border-color:#657b90}
+
 #donixFlow .df-noart{display:grid;place-items:center;background:linear-gradient(145deg,#e3d4b9,#7d9fb0);color:#25394b;font-size:55px}
 #donixFlow .df-case{position:absolute;inset:0;width:100%;height:100%;object-fit:fill;pointer-events:none}
 #donixFlow #dfName{max-width:90vw;min-height:53px;text-align:center;font-size:14px;color:#e5edf8;overflow-wrap:anywhere;padding:0 10px;line-height:1.6}
@@ -3163,6 +3183,7 @@ document.addEventListener('DOMContentLoaded',()=>{document.title='DONIX C-WALK v
 </style>
 <div id="donixFlow" role="dialog" aria-modal="true" aria-label="ケースカバーフロー">
 <h2>CASE COVER FLOW</h2><div class="df-hint">フタを閉じたウォークマンをタップして表示<br>左右にスワイプ／中央のケースをタップして再生</div>
+<button type="button" id="dfLabelToggle" aria-pressed="true" title="ジャケット上の曲名とアーティスト名の表示切替">文字：ON</button>
 <div class="df-stage" id="dfStage"></div><div id="dfName"></div>
 <div class="df-actions"><button type="button" id="dfPrev">◀</button><button type="button" id="dfInsert">♫ この曲を再生</button><button type="button" id="dfNext">▶</button><button type="button" id="dfCancel">✕ 閉じる</button></div>
 <div class="df-now" id="dfNow"></div>
@@ -3172,6 +3193,13 @@ document.addEventListener('DOMContentLoaded',()=>{document.title='DONIX C-WALK v
 'use strict';
 const modal=document.getElementById('donixFlow'),stage=document.getElementById('dfStage'),name=document.getElementById('dfName'),now=document.getElementById('dfNow');
 let position=0,opened=false,drag=null,animation=0,ignoreClickUntil=0,cardMap=new Map();
+// Remember whether artwork lettering is displayed. It never modifies the source album art.
+const labelToggle=document.getElementById('dfLabelToggle');
+let labelsVisible=true;
+try{labelsVisible=localStorage.getItem('donix-caseflow-show-captions')!=='off'}catch(_){}
+function syncLabelToggle(){modal.classList.toggle('hide-captions',!labelsVisible);labelToggle.setAttribute('aria-pressed',String(labelsVisible));labelToggle.textContent='文字：'+(labelsVisible?'ON':'OFF')}
+labelToggle.addEventListener('click',()=>{labelsVisible=!labelsVisible;try{localStorage.setItem('donix-caseflow-show-captions',labelsVisible?'on':'off')}catch(_){}syncLabelToggle()});
+syncLabelToggle();
 // Keep decoded artwork in memory and reuse it while browsing; avoid creating
 // a fresh image on every animation frame (which caused blank case covers).
 const artCache=new Map();
@@ -3190,25 +3218,100 @@ function requestArt(src,callback){
  entry.image.src=src;trimArtCache();
 }
 function trimArtCache(){if(artCache.size<=MAX_ART_CACHE)return;for(const [key,entry] of artCache){if(artCache.size<=MAX_ART_CACHE)break;if(entry.state!=='loading')artCache.delete(key)}}
+// Metadata first, filename fallback (including 'Artist - Title.mp3' names).
+function captionMetadata(song){
+ const raw=String(song?.name||'').replace(/\.(mp3|flac|m4a|alac|wav|aiff?|ogg)$/i,'').trim();
+ let artist=String(song?.artist||'').trim(),title=String(song?.title||'').trim();
+ const match=raw.match(/^(.+?)\s+[–—-]\s+(.+)$/);
+ if(match){if(!artist)artist=match[1].trim();if(!title)title=match[2].trim()}
+ if(!title)title=raw;
+ title=title.replace(/^\d{1,3}[\s._-]+/,'').trim()||raw||'曲名不明';
+ return {title,artist:artist||'アーティスト不明'};
+}
+// Deterministically random typography: the same track retains its font on each open/swipe.
+function fontFor(song){let seed=String(song?.id||song?.name||'');let hash=2166136261;for(let i=0;i<seed.length;i++){hash=Math.imul(hash^seed.charCodeAt(i),16777619)}return (hash>>>0)%8}
+function applyCaption(card,song){
+ const data=captionMetadata(song),font=fontFor(song),key=[data.title,data.artist,font].join('\u0001');
+ if(card._captionKey===key)return;
+ card._captionKey=key;
+ card.querySelector('.df-top .df-caption-text').textContent=data.title;
+ card.querySelector('.df-bottom .df-caption-text').textContent=data.artist;
+ // A long title remains inside the insert rather than spilling outside the jewel case.
+ const count=Array.from(data.title).length,artistCount=Array.from(data.artist).length;
+ card.style.setProperty('--df-title-size',Math.max(10,16-Math.max(0,count-13)*.27).toFixed(1)+'px');
+ card.style.setProperty('--df-artist-size',Math.max(9,12-Math.max(0,artistCount-18)*.13).toFixed(1)+'px');
+ if(card._fontType!==undefined)card.classList.remove('df-type-'+card._fontType);
+ card._fontType=font;card.classList.add('df-type-'+font);
+}
+// Canvas color sampling works with embedded data URLs and local blob URLs.
+// Sample the top and bottom individually, because album covers often have uneven lighting.
+function coverInk(src){
+ const entry=artCache.get(src);if(!entry||entry.state!=='ready')return null;
+ if(entry.captionInk)return entry.captionInk;
+ try{
+  const canvas=document.createElement('canvas');canvas.width=32;canvas.height=40;
+  const context=canvas.getContext('2d',{willReadFrequently:true});
+  context.drawImage(entry.image,0,0,32,40);
+  const px=context.getImageData(0,0,32,40).data;
+  const zone=(from,to)=>{
+   let sr=0,sg=0,sb=0,n=0;const colors=[];
+   for(let y=from;y<to;y++)for(let x=0;x<32;x++){
+    const k=(y*32+x)*4,a=px[k+3]/255;if(a<.4)continue;
+    const r=px[k],g=px[k+1],b=px[k+2];sr+=r;sg+=g;sb+=b;n++;
+    if(x%3===0&&y%2===0)colors.push([r,g,b]);
+   }
+   if(!n)return ['#ffffff','rgba(0,0,0,.77)','#000'];
+   const avg=[sr/n,sg/n,sb/n];
+   const luminance=c=>c.map(v=>{v/=255;return v<=.04045?v/12.92:Math.pow((v+.055)/1.055,2.4)}).reduce((v,c,i)=>v+c*[.2126,.7152,.0722][i],0);
+   const bg=luminance(avg),white=(1.05)/(bg+.05)>=((bg+.05)/.05);
+   let chosen=white?[255,255,255]:[14,24,35],bestScore=0;
+   // Prefer a contrasting, colorful hue from the artwork when it remains readable.
+   for(const rgb of colors){
+    const mx=Math.max(...rgb),mn=Math.min(...rgb),sat=mx?((mx-mn)/mx):0;
+    if(sat<.48)continue;
+    const lum=luminance(rgb),contrast=(Math.max(lum,bg)+.05)/(Math.min(lum,bg)+.05);
+    if(contrast<5.1)continue;
+    const score=(contrast-4.5)*(.35+sat);
+    if(score>bestScore){bestScore=score;chosen=rgb}
+   }
+   const css='rgb('+chosen.map(v=>Math.round(v)).join(',')+')';
+   return [css,white?'rgba(0,0,0,.78)':'rgba(255,255,255,.79)',white?'#000':'#fff'];
+  };
+  entry.captionInk={top:zone(0,10),bottom:zone(29,40)};
+ }catch(_){entry.captionInk=null}
+ return entry.captionInk;
+}
+function setCaptionColors(card,palette){
+ const top=palette?.top||['#fff','rgba(0,0,0,.76)','#000'];
+ const bottom=palette?.bottom||['#fff','rgba(0,0,0,.76)','#000'];
+ card.style.setProperty('--df-top-ink',top[0]);card.style.setProperty('--df-top-shade',top[1]);card.style.setProperty('--df-top-shadow',top[2]);
+ card.style.setProperty('--df-bottom-ink',bottom[0]);card.style.setProperty('--df-bottom-shade',bottom[1]);card.style.setProperty('--df-bottom-shadow',bottom[2]);
+}
 function updateCardArt(card,src){
  if(card._wantedArt===src)return;
  card._wantedArt=src;
- const paper=card.querySelector('.df-paper');
- if(!src){paper.replaceChildren(makeBlank());card._displayedArt='';return}
+  const picture=card.querySelector('.df-picture');
+ if(!src){picture.replaceChildren(makeBlank());card._displayedArt='';setCaptionColors(card,null);return}
  requestArt(src,ready=>{
-  if(card._wantedArt!==src)return; // Old asynchronous response must not overwrite a newer cover.
-  if(!ready){if(!card._displayedArt)paper.replaceChildren(makeBlank());return}
-  if(card._displayedArt===ready)return;
-  const img=document.createElement('img');img.className='df-art';img.src=ready;img.alt='ジャケット画像';
-  img.onerror=()=>{if(card._wantedArt===ready){card._wantedArt=null;card._displayedArt='';paper.replaceChildren(makeBlank())}};
-  paper.replaceChildren(img);card._displayedArt=ready;
+  if(card._wantedArt!==src)return; // Do not overwrite newer artwork after an async decode.
+  if(!ready){if(!card._displayedArt)picture.replaceChildren(makeBlank());return}
+  if(card._displayedArt!==ready){
+   const img=document.createElement('img');img.className='df-art';img.src=ready;img.alt='ジャケット画像';
+   img.onerror=()=>{if(card._wantedArt===ready){card._wantedArt=null;card._displayedArt='';picture.replaceChildren(makeBlank());setCaptionColors(card,null)}};
+   picture.replaceChildren(img);card._displayedArt=ready;
+  }
+  setCaptionColors(card,coverInk(ready));
  });
 }
 function makeBlank(){const blank=document.createElement('div');blank.className='df-art df-noart';blank.textContent='♫';return blank}
 function clamp(v){return Math.max(0,Math.min(library().length-1,v))}
 function selected(){return Math.round(clamp(position))}
 function makeCard(i){const item=library()[i],card=document.createElement('div');card.className='df-card';card.dataset.index=i;
-const paper=document.createElement('div');paper.className='df-paper';paper.append(makeBlank());card.append(paper);
+const paper=document.createElement('div');paper.className='df-paper';
+const picture=document.createElement('div');picture.className='df-picture';picture.append(makeBlank());
+const title=document.createElement('div');title.className='df-caption df-top';title.innerHTML='<span class="df-caption-text"></span>';
+const artist=document.createElement('div');artist.className='df-caption df-bottom';artist.innerHTML='<span class="df-caption-text"></span>';
+paper.append(picture,title,artist);card.append(paper);applyCaption(card,item);
 const caseImg=document.createElement('img');caseImg.className='df-case';caseImg.src='donix_clear_case.png';caseImg.alt='';card.append(caseImg);
 updateCardArt(card,cover(item));
 card.addEventListener('click',()=>{if(Date.now()<ignoreClickUntil||drag)return;if(i===selected())insert();else animateTo(i)});return card}
@@ -3218,10 +3321,11 @@ for(const [i,card] of cardMap){if(i<lo||i>hi){card.remove();cardMap.delete(i)}}
 for(let i=lo;i<=hi;i++){let card=cardMap.get(i);if(!card){card=makeCard(i);stage.append(card);cardMap.set(i,card)}
 // Reuse cached decoded images and prefetch neighboring case covers.
 updateCardArt(card,cover(arr[i]));
+applyCaption(card,arr[i]);
 const d=i-position,abs=Math.abs(d),side=Math.sign(d),x=d*66;
 card.style.transform=`translate(-50%,-50%) translateX(${x}%) rotateY(${-side*Math.min(abs,1)*43}deg) scale(${1-.18*Math.min(abs,1)})`;
 card.style.opacity=String(Math.max(0,1-Math.max(0,abs-1)*.25));card.style.zIndex=String(100-Math.round(abs*10));card.style.pointerEvents=abs>3?'none':'auto';}
-const song=arr[center];name.textContent=(center+1)+' / '+arr.length+'　'+(song.name||'')+(song.artist?'　/　'+song.artist:'');
+const song=arr[center],meta=captionMetadata(song);name.textContent=(center+1)+' / '+arr.length+'　'+meta.title+'　/　'+meta.artist;
 }
 function refreshNow(){try{const arr=library(),a=document.getElementById('audio');now.textContent=a&&!a.paused?'♪ 再生中：'+(arr[typeof idx==='number'?idx:0]?.name||''):'左右にスワイプして曲を選択'}catch(_){now.textContent=''}}
 function stop(){if(animation){cancelAnimationFrame(animation);animation=0}}
